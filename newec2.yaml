@@ -1,0 +1,32 @@
+---
+- name: Provisioning a new EC2 instance
+  hosts: localhost
+  connection: local
+  gather_facts: False
+  tags: provisioning
+
+  tasks:
+    - name: Start an instance with a public IP address
+      amazon.aws.ec2_instance:
+        name: "public-compute-instance"
+        key_name: "key-pair"
+        region: "us-east-1"
+        vpc_subnet_id: subnet-067c5a1554843c20f
+        instance_type: t2.micro
+        security_group: "SG"  # Ensure this group exists
+        network_interfaces:
+          - assign_public_ip: true
+        image_id: ami-005fc0f236362e99f
+        tags:
+          Environment: Testing
+        user_data: |
+          #!/bin/bash
+          sudo apt update -y
+          sudo apt install docker.io -y
+          sudo systemctl start docker
+          sudo systemctl enable docker
+          sudo docker run -d --name 2048 -p 3000:3000 sevenajay/2048:latest
+        wait: yes
+      register: ec2
+
+# Removed port opening task since it's not needed.
